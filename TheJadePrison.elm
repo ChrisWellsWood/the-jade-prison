@@ -78,19 +78,24 @@ view model =
     div []
         [ input [ placeholder "Name", onInput EditName ] []
         , input [ placeholder "Player", onInput EditPlayer ] []
-        , select [ onInput EditCaste ]
-            (List.map casteOption castes)
+        , casteSelect
         , br [] []
         , input [ placeholder "Concept", onInput EditConcept ] []
         , input [ placeholder "Anima", onInput EditAnima ] []
-        , select [ onInput EditSupernal ]
-            (List.map supernalOption abilities)
+        , supernalSelect
         ]
 
 
-casteOption : String -> Html msg
-casteOption caste =
-    option [] [ text caste ]
+casteSelect : Html Msg
+casteSelect =
+    select
+        [ onInput EditCaste ]
+        (List.map simpleOption castes)
+
+
+simpleOption : String -> Html msg
+simpleOption val =
+    option [ value val ] [ text val ]
 
 
 castes : List String
@@ -103,9 +108,11 @@ castes =
     ]
 
 
-supernalOption : String -> Html Msg
-supernalOption supernal =
-    option [] [ text supernal ]
+supernalSelect : Html Msg
+supernalSelect =
+    select
+        [ onInput EditSupernal ]
+        (List.map simpleOption abilities)
 
 
 abilities : List String
