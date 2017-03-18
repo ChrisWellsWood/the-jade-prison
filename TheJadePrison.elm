@@ -1,8 +1,10 @@
 module Main exposing (..)
 
+import Dict
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import String
 
 
 main : Program Never Model Msg
@@ -17,7 +19,7 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    (Model "" "" "Dawn" "" "" "Archery") ! []
+    (Model emptyPlayerInfo) ! []
 
 
 
@@ -25,13 +27,24 @@ init =
 
 
 type alias Model =
-    { name : String
-    , player : String
-    , caste : String
-    , concept : String
-    , anima : String
-    , supernalAbility : String
+    { playerInformation : PlayerInformation
     }
+
+
+type alias PlayerInformation =
+    Dict.Dict String (Maybe String)
+
+
+emptyPlayerInfo : PlayerInformation
+emptyPlayerInfo =
+    Dict.fromList
+        [ ( "Name", Nothing )
+        , ( "Player", Nothing )
+        , ( "Caste", Just "Dawn" )
+        , ( "Concept", Nothing )
+        , ( "Anima", Nothing )
+        , ( "Supernal", Just "Archery" )
+        ]
 
 
 
@@ -39,34 +52,25 @@ type alias Model =
 
 
 type Msg
-    = EditName String
-    | EditPlayer String
-    | EditCaste String
-    | EditConcept String
-    | EditAnima String
-    | EditSupernal String
+    = EditPlayerInformation String String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        EditName name ->
-            { model | name = name } ! []
-
-        EditPlayer player ->
-            { model | player = player } ! []
-
-        EditCaste caste ->
-            { model | caste = caste } ! []
-
-        EditConcept concept ->
-            { model | concept = concept } ! []
-
-        EditAnima anima ->
-            { model | anima = anima } ! []
-
-        EditSupernal supernal ->
-            { model | supernalAbility = supernal } ! []
+        EditPlayerInformation section val ->
+            let
+                newPlayerInfo =
+                    Dict.insert
+                        section
+                        (if String.length val > 0 then
+                            (Just val)
+                         else
+                            Nothing
+                        )
+                        model.playerInformation
+            in
+                { model | playerInformation = newPlayerInfo } ! []
 
 
 
@@ -76,12 +80,28 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ input [ placeholder "Name", onInput EditName ] []
-        , input [ placeholder "Player", onInput EditPlayer ] []
+        [ input
+            [ placeholder "Name"
+            , onInput (EditPlayerInformation "Name")
+            ]
+            []
+        , input
+            [ placeholder "Player"
+            , onInput (EditPlayerInformation "Player")
+            ]
+            []
         , casteSelect
         , br [] []
-        , input [ placeholder "Concept", onInput EditConcept ] []
-        , input [ placeholder "Anima", onInput EditAnima ] []
+        , input
+            [ placeholder "Concept"
+            , onInput (EditPlayerInformation "Concept")
+            ]
+            []
+        , input
+            [ placeholder "Anima"
+            , onInput (EditPlayerInformation "Anima")
+            ]
+            []
         , supernalSelect
         ]
 
@@ -89,7 +109,7 @@ view model =
 casteSelect : Html Msg
 casteSelect =
     select
-        [ onInput EditCaste ]
+        [ onInput (EditPlayerInformation "Caste") ]
         (List.map simpleOption castes)
 
 
@@ -111,7 +131,7 @@ castes =
 supernalSelect : Html Msg
 supernalSelect =
     select
-        [ onInput EditSupernal ]
+        [ onInput (EditPlayerInformation "Supernal") ]
         (List.map simpleOption abilities)
 
 
