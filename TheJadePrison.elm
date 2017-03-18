@@ -80,6 +80,13 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
+        [ playerInformationView model
+        ]
+
+
+playerInformationView : Model -> Html Msg
+playerInformationView model =
+    div []
         [ input
             [ placeholder "Name"
             , onInput (EditPlayerInformation "Name")
