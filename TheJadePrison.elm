@@ -5,6 +5,8 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import String
+import Svg
+import Svg.Attributes as SvgAtt
 
 
 main : Program Never Model Msg
@@ -73,12 +75,7 @@ emptyExAttributes =
 
 type Msg
     = EditPlayerInformation String String
-    | EditExAttribute Operation String
-
-
-type Operation
-    = Increment
-    | Decrement
+    | EditExAttribute String Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -98,42 +95,20 @@ update msg model =
             in
                 { model | playerInformation = newPlayerInfo } ! []
 
-        EditExAttribute operation exAttribute ->
+        EditExAttribute exAttribute attributeValue ->
             { model
                 | exAttributes =
                     updateExAttributes
                         model.exAttributes
-                        operation
                         exAttribute
+                        attributeValue
             }
                 ! []
 
 
-updateExAttributes : ExAttributes -> Operation -> String -> ExAttributes
-updateExAttributes attributes operation exAttribute =
-    let
-        oldAttribute =
-            Dict.get exAttribute attributes
-                |> Maybe.withDefault 0
-    in
-        case operation of
-            Increment ->
-                if oldAttribute < 5 then
-                    Dict.insert
-                        exAttribute
-                        (oldAttribute + 1)
-                        attributes
-                else
-                    attributes
-
-            Decrement ->
-                if oldAttribute > 1 then
-                    Dict.insert
-                        exAttribute
-                        (oldAttribute - 1)
-                        attributes
-                else
-                    attributes
+updateExAttributes : ExAttributes -> String -> Int -> ExAttributes
+updateExAttributes attributes exAttribute attributeValue =
+    Dict.insert exAttribute attributeValue attributes
 
 
 
@@ -145,6 +120,28 @@ view model =
     div []
         [ playerInformationView model
         , allExAttributesView model
+        ]
+
+
+pointDot : String -> Int -> Bool -> Html Msg
+pointDot exAttribute attributeValue filled =
+    Svg.svg
+        [ SvgAtt.width "20"
+        , SvgAtt.height "20"
+        , onClick (EditExAttribute exAttribute attributeValue)
+        ]
+        [ Svg.circle
+            [ SvgAtt.cx "10"
+            , SvgAtt.cy "10"
+            , SvgAtt.r "8"
+            , SvgAtt.stroke "black"
+            , SvgAtt.strokeWidth "2"
+            , if filled then
+                  SvgAtt.fill "black"
+              else
+                  SvgAtt.fill "white"
+            ]
+            []
         ]
 
 
@@ -238,16 +235,21 @@ allExAttributesView model =
 
 exAttributeView : ( String, Int ) -> Html Msg
 exAttributeView ( exAttribute, exAttributeVal ) =
-    div []
-        [ text (exAttribute ++ " ")
-        , text (toString exAttributeVal)
-        , button
-            [ onClick (EditExAttribute Decrement exAttribute) ]
-            [ text "-" ]
-        , button
-            [ onClick (EditExAttribute Increment exAttribute) ]
-            [ text "+" ]
-        ]
+    let
+        filledList =
+            List.map2 (\ref val -> ref >= val)
+                (List.repeat 5 exAttributeVal)
+                (List.range 1 5)
+    in
+        div []
+            [ text exAttribute
+            , div
+                []
+                ( List.map2 (pointDot exAttribute)
+                    (List.range 1 5)
+                    filledList 
+                )
+            ]
 
 
 
