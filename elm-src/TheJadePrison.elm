@@ -1,4 +1,4 @@
-module Main exposing (..)
+module TheJadePrison exposing (..)
 
 import Dict
 import Html exposing (..)
@@ -137,9 +137,9 @@ pointDot exAttribute attributeValue filled =
             , SvgAtt.stroke "black"
             , SvgAtt.strokeWidth "2"
             , if filled then
-                  SvgAtt.fill "black"
+                SvgAtt.fill "black"
               else
-                  SvgAtt.fill "white"
+                SvgAtt.fill "white"
             ]
             []
         ]
@@ -228,14 +228,53 @@ attributes =
 allExAttributesView : Model -> Html Msg
 allExAttributesView model =
     div []
-        (Dict.toList model.exAttributes
-            |> List.map exAttributeView
-        )
+        [ hr [] []
+        , h2 [] [ text "Attributes" ]
+        , div []
+            [ physicalAttributes model.exAttributes
+            , socialAttributes model.exAttributes
+            , mentalAttributes model.exAttributes
+            ]
+        ]
 
 
-exAttributeView : ( String, Int ) -> Html Msg
-exAttributeView ( exAttribute, exAttributeVal ) =
+physicalAttributes : ExAttributes -> Html Msg
+physicalAttributes exAttributes =
+    div []
+        [ h3 [] [ text "Physical" ]
+        , exAttributeView exAttributes "Strength"
+        , exAttributeView exAttributes "Dexterity"
+        , exAttributeView exAttributes "Stamina"
+        ]
+
+
+socialAttributes : ExAttributes -> Html Msg
+socialAttributes exAttributes =
+    div []
+        [ h3 [] [ text "Social" ]
+        , exAttributeView exAttributes "Charisma"
+        , exAttributeView exAttributes "Manipulation"
+        , exAttributeView exAttributes "Appearance"
+        ]
+
+
+mentalAttributes : ExAttributes -> Html Msg
+mentalAttributes exAttributes =
+    div []
+        [ h3 [] [ text "Mental" ]
+        , exAttributeView exAttributes "Perception"
+        , exAttributeView exAttributes "Intelligence"
+        , exAttributeView exAttributes "Wits"
+        ]
+
+
+exAttributeView : ExAttributes -> String -> Html Msg
+exAttributeView exAttributes exAttribute =
     let
+        exAttributeVal =
+            Dict.get exAttribute exAttributes
+                |> Maybe.withDefault 1
+
         filledList =
             List.map2 (\ref val -> ref >= val)
                 (List.repeat 5 exAttributeVal)
@@ -245,9 +284,9 @@ exAttributeView ( exAttribute, exAttributeVal ) =
             [ text exAttribute
             , div
                 []
-                ( List.map2 (pointDot exAttribute)
+                (List.map2 (pointDot exAttribute)
                     (List.range 1 5)
-                    filledList 
+                    filledList
                 )
             ]
 
