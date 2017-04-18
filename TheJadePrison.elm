@@ -21,7 +21,7 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    (Model emptyPlayerInfo emptyExAttributes) ! []
+    (Model emptyPlayerInfo emptyExAttributes emptyExAbilities) ! []
 
 
 
@@ -31,6 +31,7 @@ init =
 type alias Model =
     { playerInformation : PlayerInformation
     , exAttributes : ExAttributes
+    , exAbilities : ExAbilities
     }
 
 
@@ -40,6 +41,10 @@ type alias PlayerInformation =
 
 type alias ExAttributes =
     Dict.Dict String Int
+
+
+type alias ExAbilities =
+    Dict.Dict String ( Bool, Int )
 
 
 emptyPlayerInfo : PlayerInformation
@@ -69,6 +74,38 @@ emptyExAttributes =
         ]
 
 
+emptyExAbilities : ExAbilities
+emptyExAbilities =
+    Dict.fromList
+        [ ( "Archery", ( False, 0 ) )
+        , ( "Athletics", ( False, 0 ) )
+        , ( "Awareness", ( False, 0 ) )
+        , ( "Brawl", ( False, 0 ) )
+        , ( "Bureaucracy", ( False, 0 ) )
+        , ( "Craft", ( False, 0 ) )
+        , ( "Dodge", ( False, 0 ) )
+        , ( "Integrity", ( False, 0 ) )
+        , ( "Investigation", ( False, 0 ) )
+        , ( "Larceny", ( False, 0 ) )
+        , ( "Linguistics", ( False, 0 ) )
+        , ( "Lore", ( False, 0 ) )
+        , ( "Martial Arts", ( False, 0 ) )
+        , ( "Medicine", ( False, 0 ) )
+        , ( "Melee", ( False, 0 ) )
+        , ( "Occult", ( False, 0 ) )
+        , ( "Performance", ( False, 0 ) )
+        , ( "Presence", ( False, 0 ) )
+        , ( "Resistance", ( False, 0 ) )
+        , ( "Ride", ( False, 0 ) )
+        , ( "Sail", ( False, 0 ) )
+        , ( "Socialize", ( False, 0 ) )
+        , ( "Stealth", ( False, 0 ) )
+        , ( "Survival", ( False, 0 ) )
+        , ( "Thrown", ( False, 0 ) )
+        , ( "War", ( False, 0 ) )
+        ]
+
+
 
 -- Update
 
@@ -76,6 +113,8 @@ emptyExAttributes =
 type Msg
     = EditPlayerInformation String String
     | EditExAttribute String Int
+    | EditExAbility String Int
+    | ToggleCasteOrFavoured String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -105,10 +144,57 @@ update msg model =
             }
                 ! []
 
+        EditExAbility exAbility abilityValue ->
+            { model
+                | exAbilities =
+                    updateExAbilities
+                        model.exAbilities
+                        exAbility
+                        abilityValue
+            }
+                ! []
+
+        ToggleCasteOrFavoured exAbility ->
+            let
+                exAbilities =
+                    toggleCasteOrFavoured
+                        exAbility
+                        model.exAbilities
+            in
+                { model | exAbilities = exAbilities } ! []
+
 
 updateExAttributes : ExAttributes -> String -> Int -> ExAttributes
 updateExAttributes attributes exAttribute attributeValue =
     Dict.insert exAttribute attributeValue attributes
+
+
+updateExAbilities :
+    ExAbilities
+    -> String
+    -> Int
+    -> ExAbilities
+updateExAbilities exAbilities exAbility abilityValue =
+    let
+        ( favoured, _ ) =
+            Dict.get exAbility exAbilities
+                |> Maybe.withDefault ( False, 0 )
+        updatedValue = ( favoured, abilityValue )
+    in
+        Dict.insert exAbility updatedValue exAbilities
+
+
+toggleCasteOrFavoured : String -> ExAbilities -> ExAbilities
+toggleCasteOrFavoured exAbility exAbilities =
+    let
+        ( favoured, abilityValue ) =
+            Dict.get exAbility exAbilities
+                |> Maybe.withDefault ( False, 0 )
+
+        toggledFavoured =
+            ( not favoured, abilityValue )
+    in
+        Dict.insert exAbility toggledFavoured exAbilities
 
 
 
@@ -120,11 +206,12 @@ view model =
     div []
         [ playerInformationView model
         , allExAttributesView model
+        , allAbilitiesView model.exAbilities
         ]
 
 
-pointDot : String -> Int -> Bool -> Html Msg
-pointDot exAttribute attributeValue filled =
+attributeDot : String -> Int -> Bool -> Html Msg
+attributeDot exAttribute attributeValue filled =
     Svg.svg
         [ SvgAtt.width "20"
         , SvgAtt.height "20"
@@ -137,9 +224,52 @@ pointDot exAttribute attributeValue filled =
             , SvgAtt.stroke "black"
             , SvgAtt.strokeWidth "2"
             , if filled then
-                  SvgAtt.fill "black"
+                SvgAtt.fill "black"
               else
-                  SvgAtt.fill "white"
+                SvgAtt.fill "white"
+            ]
+            []
+        ]
+
+
+abilityDot : String -> Int -> Bool -> Html Msg
+abilityDot exAbility abilityValue filled =
+    Svg.svg
+        [ SvgAtt.width "20"
+        , SvgAtt.height "20"
+        , onClick (EditExAbility exAbility  abilityValue)
+        ]
+        [ Svg.circle
+            [ SvgAtt.cx "10"
+            , SvgAtt.cy "10"
+            , SvgAtt.r "8"
+            , SvgAtt.stroke "black"
+            , SvgAtt.strokeWidth "2"
+            , if filled then
+                SvgAtt.fill "black"
+              else
+                SvgAtt.fill "white"
+            ]
+            []
+        ]
+
+
+casteOrFavouredBox : String -> Bool -> Html Msg
+casteOrFavouredBox exAbility casteOrFavoured =
+    Svg.svg
+        [ SvgAtt.width "18"
+        , SvgAtt.height "18"
+        , onClick (ToggleCasteOrFavoured exAbility)
+        ]
+        [ Svg.rect
+            [ SvgAtt.width "18"
+            , SvgAtt.height "18"
+            , SvgAtt.stroke "black"
+            , SvgAtt.strokeWidth "4"
+            , if casteOrFavoured then
+                SvgAtt.fill "black"
+              else
+                SvgAtt.fill "white"
             ]
             []
         ]
@@ -228,14 +358,50 @@ attributes =
 allExAttributesView : Model -> Html Msg
 allExAttributesView model =
     div []
-        (Dict.toList model.exAttributes
-            |> List.map exAttributeView
-        )
+        [ h2 [] [ text "Attributes" ]
+        , physicalAttributes model.exAttributes
+        , socialAttributes model.exAttributes
+        , mentalAttributes model.exAttributes
+        ]
 
 
-exAttributeView : ( String, Int ) -> Html Msg
-exAttributeView ( exAttribute, exAttributeVal ) =
+physicalAttributes : ExAttributes -> Html Msg
+physicalAttributes exAttributes =
+    div []
+        [ h3 [] [ text "Physical" ]
+        , exAttributeView exAttributes "Strength"
+        , exAttributeView exAttributes "Dexterity"
+        , exAttributeView exAttributes "Stamina"
+        ]
+
+
+socialAttributes : ExAttributes -> Html Msg
+socialAttributes exAttributes =
+    div []
+        [ h3 [] [ text "Social" ]
+        , exAttributeView exAttributes "Charisma"
+        , exAttributeView exAttributes "Manipulation"
+        , exAttributeView exAttributes "Appearance"
+        ]
+
+
+mentalAttributes : ExAttributes -> Html Msg
+mentalAttributes exAttributes =
+    div []
+        [ h3 [] [ text "Mental" ]
+        , exAttributeView exAttributes "Perception"
+        , exAttributeView exAttributes "Intelligence"
+        , exAttributeView exAttributes "Wits"
+        ]
+
+
+exAttributeView : ExAttributes -> String -> Html Msg
+exAttributeView exAttributes exAttribute =
     let
+        exAttributeVal =
+            Dict.get exAttribute exAttributes
+                |> Maybe.withDefault 1
+
         filledList =
             List.map2 (\ref val -> ref >= val)
                 (List.repeat 5 exAttributeVal)
@@ -245,9 +411,9 @@ exAttributeView ( exAttribute, exAttributeVal ) =
             [ text exAttribute
             , div
                 []
-                ( List.map2 (pointDot exAttribute)
+                (List.map2 (attributeDot exAttribute)
                     (List.range 1 5)
-                    filledList 
+                    filledList
                 )
             ]
 
@@ -285,3 +451,35 @@ abilities =
     , "Thrown"
     , "War"
     ]
+
+
+allAbilitiesView : ExAbilities -> Html Msg
+allAbilitiesView exAbilites =
+    div []
+        ([ h2 [] [ text "Abilities" ] ]
+            ++ List.map (exAbilityView exAbilites) abilities
+        )
+
+
+exAbilityView : ExAbilities -> String -> Html Msg
+exAbilityView exAbilities exAbility =
+    let
+        ( favoured, exAbilityVal ) =
+            Dict.get exAbility exAbilities
+                |> Maybe.withDefault ( False, 0 )
+
+        filledList =
+            List.map2 (\ref val -> ref >= val)
+                (List.repeat 5 exAbilityVal)
+                (List.range 1 5)
+    in
+        div []
+            [ casteOrFavouredBox exAbility favoured
+            , text exAbility
+            , div
+                []
+                (List.map2 (abilityDot exAbility)
+                    (List.range 1 5)
+                    filledList
+                )
+            ]
