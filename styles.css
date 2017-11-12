@@ -2,7 +2,6 @@
     display: grid;
     height: 100vh;
     grid-template-columns: 1fr 4fr 1fr;
-    grid-template-rows: 1fr 2fr 3fr;
     width: 100vw;
 }
 
