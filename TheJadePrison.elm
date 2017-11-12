@@ -179,7 +179,9 @@ updateExAbilities exAbilities exAbility abilityValue =
         ( favoured, _ ) =
             Dict.get exAbility exAbilities
                 |> Maybe.withDefault ( False, 0 )
-        updatedValue = ( favoured, abilityValue )
+
+        updatedValue =
+            ( favoured, abilityValue )
     in
         Dict.insert exAbility updatedValue exAbilities
 
@@ -203,7 +205,7 @@ toggleCasteOrFavoured exAbility exAbilities =
 
 view : Model -> Html Msg
 view model =
-    div []
+    div [ class "character-sheet" ]
         [ playerInformationView model
         , allExAttributesView model
         , allAbilitiesView model.exAbilities
@@ -237,7 +239,7 @@ abilityDot exAbility abilityValue filled =
     Svg.svg
         [ SvgAtt.width "20"
         , SvgAtt.height "20"
-        , onClick (EditExAbility exAbility  abilityValue)
+        , onClick (EditExAbility exAbility abilityValue)
         ]
         [ Svg.circle
             [ SvgAtt.cx "10"
@@ -281,7 +283,7 @@ casteOrFavouredBox exAbility casteOrFavoured =
 
 playerInformationView : Model -> Html Msg
 playerInformationView model =
-    div []
+    div [ class "player-info" ]
         [ input
             [ placeholder "Name"
             , onInput (EditPlayerInformation "Name")
@@ -357,8 +359,8 @@ attributes =
 
 allExAttributesView : Model -> Html Msg
 allExAttributesView model =
-    div []
-        [ h2 [] [ text "Attributes" ]
+    div [ class "attributes" ]
+        [ div [ class "title-box-3col" ] [ h2 [] [ text "Attributes" ] ]
         , physicalAttributes model.exAttributes
         , socialAttributes model.exAttributes
         , mentalAttributes model.exAttributes
@@ -455,10 +457,10 @@ abilities =
 
 allAbilitiesView : ExAbilities -> Html Msg
 allAbilitiesView exAbilites =
-    div []
-        ([ h2 [] [ text "Abilities" ] ]
-            ++ List.map (exAbilityView exAbilites) abilities
-        )
+    div [ class "abilities" ]
+        [ div [ class "title-box-3col" ] [ h2 [] [ text "Abilities" ] ]
+        , div [] (List.map (exAbilityView exAbilites) abilities)
+        ]
 
 
 exAbilityView : ExAbilities -> String -> Html Msg

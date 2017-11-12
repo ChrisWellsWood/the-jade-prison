@@ -1,0 +1,30 @@
+.title-box-3col {
+    grid-area: 1 / 1 / 2 / 4;
+    text-align: center;
+}
+
+.character-sheet {
+    display: grid;
+    height: 100vh;
+    grid-template-columns: 1fr 4fr 1fr;
+    grid-template-rows: 1fr 2fr 3fr;
+    width: 100vw;
+}
+
+.player-info {
+    grid-area: 1 / 2 / 1 / 3;
+}
+
+.attributes {
+    display: grid;
+    grid-area: 2 / 2 / 3 / 3;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+}
+
+.abilities {
+    display: grid;
+    grid-area: 3 / 2 / 4 / 3;
+    grid-template-columns: auto;
+    grid-template-rows: auto auto;
+}
