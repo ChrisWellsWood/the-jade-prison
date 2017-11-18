@@ -21,7 +21,13 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    (Model emptyPlayerInfo emptyExAttributes emptyExAbilities) ! []
+    (Model
+        (CreationManager 18 28)
+        emptyPlayerInfo
+        emptyExAttributes
+        emptyExAbilities
+    )
+        ! []
 
 
 
@@ -29,9 +35,16 @@ init =
 
 
 type alias Model =
-    { playerInformation : PlayerInformation
+    { creationManager : CreationManager
+    , playerInformation : PlayerInformation
     , exAttributes : ExAttributes
     , exAbilities : ExAbilities
+    }
+
+
+type alias CreationManager =
+    { attributePoints : Int
+    , abilityPoints : Int
     }
 
 
