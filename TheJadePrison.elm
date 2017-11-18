@@ -382,13 +382,28 @@ supernalSelect =
 
 attributes : List String
 attributes =
+    physicalAttributes ++ socialAttributes ++ mentalAttributes
+
+
+physicalAttributes : List String
+physicalAttributes =
     [ "Strength"
     , "Dexterity"
     , "Stamina"
-    , "Charisma"
+    ]
+
+
+socialAttributes : List String
+socialAttributes =
+    [ "Charisma"
     , "Manipulation"
     , "Appearance"
-    , "Perception"
+    ]
+
+
+mentalAttributes : List String
+mentalAttributes =
+    [ "Perception"
     , "Intelligence"
     , "Wits"
     ]
@@ -398,40 +413,18 @@ allExAttributesView : Model -> Html Msg
 allExAttributesView model =
     div [ class "attributes" ]
         [ div [ class "title-box-3col" ] [ h2 [] [ text "Attributes" ] ]
-        , physicalAttributes model.exAttributes
-        , socialAttributes model.exAttributes
-        , mentalAttributes model.exAttributes
+        , attributesSection model.exAttributes "Physical" physicalAttributes
+        , attributesSection model.exAttributes "Mental" socialAttributes
+        , attributesSection model.exAttributes "Social" mentalAttributes
         ]
 
 
-physicalAttributes : ExAttributes -> Html Msg
-physicalAttributes exAttributes =
+attributesSection : ExAttributes -> String -> List String -> Html Msg
+attributesSection exAttributes sectionName sectionAttributes =
     div []
-        [ h3 [] [ text "Physical" ]
-        , exAttributeView exAttributes "Strength"
-        , exAttributeView exAttributes "Dexterity"
-        , exAttributeView exAttributes "Stamina"
-        ]
-
-
-socialAttributes : ExAttributes -> Html Msg
-socialAttributes exAttributes =
-    div []
-        [ h3 [] [ text "Social" ]
-        , exAttributeView exAttributes "Charisma"
-        , exAttributeView exAttributes "Manipulation"
-        , exAttributeView exAttributes "Appearance"
-        ]
-
-
-mentalAttributes : ExAttributes -> Html Msg
-mentalAttributes exAttributes =
-    div []
-        [ h3 [] [ text "Mental" ]
-        , exAttributeView exAttributes "Perception"
-        , exAttributeView exAttributes "Intelligence"
-        , exAttributeView exAttributes "Wits"
-        ]
+        ([ h3 [] [ text sectionName ] ]
+            ++ (List.map (exAttributeView exAttributes) sectionAttributes)
+        )
 
 
 exAttributeView : ExAttributes -> String -> Html Msg
