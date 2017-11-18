@@ -249,71 +249,6 @@ view model =
         ]
 
 
-attributeDot : String -> Int -> Bool -> Html Msg
-attributeDot exAttribute attributeValue filled =
-    Svg.svg
-        [ SvgAtt.width "20"
-        , SvgAtt.height "20"
-        , onClick (EditExAttribute exAttribute attributeValue)
-        ]
-        [ Svg.circle
-            [ SvgAtt.cx "10"
-            , SvgAtt.cy "10"
-            , SvgAtt.r "8"
-            , SvgAtt.stroke "black"
-            , SvgAtt.strokeWidth "2"
-            , if filled then
-                SvgAtt.fill "black"
-              else
-                SvgAtt.fill "white"
-            ]
-            []
-        ]
-
-
-abilityDot : String -> Int -> Bool -> Html Msg
-abilityDot exAbility abilityValue filled =
-    Svg.svg
-        [ SvgAtt.width "20"
-        , SvgAtt.height "20"
-        , onClick (EditExAbility exAbility abilityValue)
-        ]
-        [ Svg.circle
-            [ SvgAtt.cx "10"
-            , SvgAtt.cy "10"
-            , SvgAtt.r "8"
-            , SvgAtt.stroke "black"
-            , SvgAtt.strokeWidth "2"
-            , if filled then
-                SvgAtt.fill "black"
-              else
-                SvgAtt.fill "white"
-            ]
-            []
-        ]
-
-
-casteOrFavouredBox : String -> Bool -> Html Msg
-casteOrFavouredBox exAbility casteOrFavoured =
-    Svg.svg
-        [ SvgAtt.width "18"
-        , SvgAtt.height "18"
-        , onClick (ToggleCasteOrFavoured exAbility)
-        ]
-        [ Svg.rect
-            [ SvgAtt.width "18"
-            , SvgAtt.height "18"
-            , SvgAtt.stroke "black"
-            , SvgAtt.strokeWidth "4"
-            , if casteOrFavoured then
-                SvgAtt.fill "black"
-              else
-                SvgAtt.fill "white"
-            ]
-            []
-        ]
-
-
 
 -- Player Information Section
 
@@ -411,24 +346,38 @@ mentalAttributes =
 
 allExAttributesView : Model -> Html Msg
 allExAttributesView model =
-    div [ class "attributes" ]
-        [ div [ class "title-box-3col" ] [ h2 [] [ text "Attributes" ] ]
-        , attributesSection model.exAttributes "Physical" physicalAttributes
-        , attributesSection model.exAttributes "Mental" socialAttributes
-        , attributesSection model.exAttributes "Social" mentalAttributes
-        ]
+    let
+        cmAttributes =
+            attributesSection
+                model.creationManager
+                model.exAttributes
+    in
+        div [ class "attributes" ]
+            [ div [ class "title-box-3col" ] [ h2 [] [ text "Attributes" ] ]
+            , cmAttributes "Physical" physicalAttributes
+            , cmAttributes "Mental" socialAttributes
+            , cmAttributes "Social" mentalAttributes
+            ]
 
 
-attributesSection : ExAttributes -> String -> List String -> Html Msg
-attributesSection exAttributes sectionName sectionAttributes =
+attributesSection :
+    CreationManager
+    -> ExAttributes
+    -> String
+    -> List String
+    -> Html Msg
+attributesSection creationManager exAttributes sectionName sectionAttributes =
     div []
         ([ h3 [] [ text sectionName ] ]
-            ++ (List.map (exAttributeView exAttributes) sectionAttributes)
+            ++ (List.map
+                    (exAttributeView exAttributes creationManager)
+                    sectionAttributes
+               )
         )
 
 
-exAttributeView : ExAttributes -> String -> Html Msg
-exAttributeView exAttributes exAttribute =
+exAttributeView : ExAttributes -> CreationManager -> String -> Html Msg
+exAttributeView exAttributes creationManager exAttribute =
     let
         exAttributeVal =
             Dict.get exAttribute exAttributes
@@ -438,16 +387,47 @@ exAttributeView exAttributes exAttribute =
             List.map2 (\ref val -> ref >= val)
                 (List.repeat 5 exAttributeVal)
                 (List.range 1 5)
+
+        overSpent =
+            if creationManager.attributePoints < 0 then
+                True
+            else
+                False
     in
         div []
             [ text exAttribute
             , div
                 []
-                (List.map2 (attributeDot exAttribute)
+                (List.map2 (attributeDot exAttribute overSpent)
                     (List.range 1 5)
                     filledList
                 )
             ]
+
+
+attributeDot : String -> Bool -> Int -> Bool -> Html Msg
+attributeDot exAttribute overSpent attributeValue filled =
+    Svg.svg
+        [ SvgAtt.width "20"
+        , SvgAtt.height "20"
+        , onClick (EditExAttribute exAttribute attributeValue)
+        ]
+        [ Svg.circle
+            [ SvgAtt.cx "10"
+            , SvgAtt.cy "10"
+            , SvgAtt.r "8"
+            , SvgAtt.stroke "black"
+            , SvgAtt.strokeWidth "2"
+            , if filled then
+                if overSpent then
+                    SvgAtt.fill "red"
+                else
+                    SvgAtt.fill "black"
+              else
+                SvgAtt.fill "white"
+            ]
+            []
+        ]
 
 
 
@@ -515,3 +495,46 @@ exAbilityView exAbilities exAbility =
                     filledList
                 )
             ]
+
+
+abilityDot : String -> Int -> Bool -> Html Msg
+abilityDot exAbility abilityValue filled =
+    Svg.svg
+        [ SvgAtt.width "20"
+        , SvgAtt.height "20"
+        , onClick (EditExAbility exAbility abilityValue)
+        ]
+        [ Svg.circle
+            [ SvgAtt.cx "10"
+            , SvgAtt.cy "10"
+            , SvgAtt.r "8"
+            , SvgAtt.stroke "black"
+            , SvgAtt.strokeWidth "2"
+            , if filled then
+                SvgAtt.fill "black"
+              else
+                SvgAtt.fill "white"
+            ]
+            []
+        ]
+
+
+casteOrFavouredBox : String -> Bool -> Html Msg
+casteOrFavouredBox exAbility casteOrFavoured =
+    Svg.svg
+        [ SvgAtt.width "18"
+        , SvgAtt.height "18"
+        , onClick (ToggleCasteOrFavoured exAbility)
+        ]
+        [ Svg.rect
+            [ SvgAtt.width "18"
+            , SvgAtt.height "18"
+            , SvgAtt.stroke "black"
+            , SvgAtt.strokeWidth "4"
+            , if casteOrFavoured then
+                SvgAtt.fill "black"
+              else
+                SvgAtt.fill "white"
+            ]
+            []
+        ]
