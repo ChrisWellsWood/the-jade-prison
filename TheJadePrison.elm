@@ -148,14 +148,19 @@ update msg model =
                 { model | playerInformation = newPlayerInfo } ! []
 
         EditExAttribute exAttribute attributeValue ->
-            { model
-                | exAttributes =
+            let
+                ( exAttributes, creationManager ) =
                     updateExAttributes
                         model.exAttributes
                         exAttribute
                         attributeValue
-            }
-                ! []
+                        model.creationManager
+            in
+                { model
+                    | exAttributes = exAttributes
+                    , creationManager = creationManager
+                }
+                    ! []
 
         EditExAbility exAbility abilityValue ->
             { model
@@ -177,9 +182,28 @@ update msg model =
                 { model | exAbilities = exAbilities } ! []
 
 
-updateExAttributes : ExAttributes -> String -> Int -> ExAttributes
-updateExAttributes attributes exAttribute attributeValue =
-    Dict.insert exAttribute attributeValue attributes
+updateExAttributes :
+    ExAttributes
+    -> String
+    -> Int
+    -> CreationManager
+    -> ( ExAttributes, CreationManager )
+updateExAttributes attributes exAttribute newValue creationManager =
+    let
+        currentValue =
+            Dict.get exAttribute attributes
+                |> Maybe.withDefault 1
+
+        updatedAttributePoints =
+            creationManager.attributePoints - (newValue - currentValue)
+
+        newCM =
+            { creationManager
+                | attributePoints =
+                    updatedAttributePoints
+            }
+    in
+        ( Dict.insert exAttribute newValue attributes, newCM )
 
 
 updateExAbilities :
