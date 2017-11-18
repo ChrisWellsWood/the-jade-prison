@@ -199,8 +199,14 @@ updateExAttributes attributes exAttribute newValue creationManager =
             Dict.get exAttribute attributes
                 |> Maybe.withDefault 1
 
+        atValue =
+            if (newValue == currentValue) then
+                1
+            else
+                newValue
+
         updatedAttributePoints =
-            creationManager.attributePoints - (newValue - currentValue)
+            creationManager.attributePoints - (atValue - currentValue)
 
         newCM =
             { creationManager
@@ -208,7 +214,7 @@ updateExAttributes attributes exAttribute newValue creationManager =
                     updatedAttributePoints
             }
     in
-        ( Dict.insert exAttribute newValue attributes, newCM )
+        ( Dict.insert exAttribute atValue attributes, newCM )
 
 
 updateExAbilities :
@@ -223,11 +229,17 @@ updateExAbilities exAbilities exAbility newValue creationManager =
             Dict.get exAbility exAbilities
                 |> Maybe.withDefault ( False, 0 )
 
+        abValue =
+            if (newValue == currentValue) then
+                0
+            else
+                newValue
+
         updatedValue =
-            ( favoured, newValue )
+            ( favoured, abValue )
 
         updatedAbilityPoints =
-            creationManager.abilityPoints - (newValue - currentValue)
+            creationManager.abilityPoints - (abValue - currentValue)
 
         newCM =
             { creationManager
