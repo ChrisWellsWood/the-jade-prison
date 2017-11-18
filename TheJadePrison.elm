@@ -163,14 +163,19 @@ update msg model =
                     ! []
 
         EditExAbility exAbility abilityValue ->
-            { model
-                | exAbilities =
+            let
+                ( exAbilities, creationManager ) =
                     updateExAbilities
                         model.exAbilities
                         exAbility
                         abilityValue
-            }
-                ! []
+                        model.creationManager
+            in
+                { model
+                    | exAbilities = exAbilities
+                    , creationManager = creationManager
+                }
+                    ! []
 
         ToggleCasteOrFavoured exAbility ->
             let
@@ -210,17 +215,27 @@ updateExAbilities :
     ExAbilities
     -> String
     -> Int
-    -> ExAbilities
-updateExAbilities exAbilities exAbility abilityValue =
+    -> CreationManager
+    -> ( ExAbilities, CreationManager )
+updateExAbilities exAbilities exAbility newValue creationManager =
     let
-        ( favoured, _ ) =
+        ( favoured, currentValue ) =
             Dict.get exAbility exAbilities
                 |> Maybe.withDefault ( False, 0 )
 
         updatedValue =
-            ( favoured, abilityValue )
+            ( favoured, newValue )
+
+        updatedAbilityPoints =
+            creationManager.abilityPoints - (newValue - currentValue)
+
+        newCM =
+            { creationManager
+                | abilityPoints =
+                    updatedAbilityPoints
+            }
     in
-        Dict.insert exAbility updatedValue exAbilities
+        ( Dict.insert exAbility updatedValue exAbilities, newCM )
 
 
 toggleCasteOrFavoured : String -> ExAbilities -> ExAbilities
@@ -245,7 +260,7 @@ view model =
     div [ class "character-sheet" ]
         [ playerInformationView model
         , allExAttributesView model
-        , allAbilitiesView model.exAbilities
+        , allAbilitiesView model
         ]
 
 
@@ -465,16 +480,20 @@ abilities =
     ]
 
 
-allAbilitiesView : ExAbilities -> Html Msg
-allAbilitiesView exAbilites =
+allAbilitiesView : Model -> Html Msg
+allAbilitiesView model =
     div [ class "abilities" ]
         [ div [ class "title-box-3col" ] [ h2 [] [ text "Abilities" ] ]
-        , div [] (List.map (exAbilityView exAbilites) abilities)
+        , div []
+            (List.map
+                (exAbilityView model.exAbilities model.creationManager)
+                abilities
+            )
         ]
 
 
-exAbilityView : ExAbilities -> String -> Html Msg
-exAbilityView exAbilities exAbility =
+exAbilityView : ExAbilities -> CreationManager -> String -> Html Msg
+exAbilityView exAbilities creationManager exAbility =
     let
         ( favoured, exAbilityVal ) =
             Dict.get exAbility exAbilities
@@ -484,21 +503,27 @@ exAbilityView exAbilities exAbility =
             List.map2 (\ref val -> ref >= val)
                 (List.repeat 5 exAbilityVal)
                 (List.range 1 5)
+
+        overSpent =
+            if creationManager.abilityPoints < 0 then
+                True
+            else
+                False
     in
         div []
             [ casteOrFavouredBox exAbility favoured
             , text exAbility
             , div
                 []
-                (List.map2 (abilityDot exAbility)
+                (List.map2 (abilityDot exAbility overSpent)
                     (List.range 1 5)
                     filledList
                 )
             ]
 
 
-abilityDot : String -> Int -> Bool -> Html Msg
-abilityDot exAbility abilityValue filled =
+abilityDot : String -> Bool -> Int -> Bool -> Html Msg
+abilityDot exAbility overSpent abilityValue filled =
     Svg.svg
         [ SvgAtt.width "20"
         , SvgAtt.height "20"
@@ -511,7 +536,10 @@ abilityDot exAbility abilityValue filled =
             , SvgAtt.stroke "black"
             , SvgAtt.strokeWidth "2"
             , if filled then
-                SvgAtt.fill "black"
+                if overSpent then
+                    SvgAtt.fill "red"
+                else
+                    SvgAtt.fill "black"
               else
                 SvgAtt.fill "white"
             ]
