@@ -269,10 +269,25 @@ toggleCasteOrFavoured exAbility exAbilities =
 
 view : Model -> Html Msg
 view model =
-    div [ class "character-sheet" ]
-        [ playerInformationView model
-        , allExAttributesView model
-        , allAbilitiesView model
+    div [ class "main-grid" ]
+        [ div [ class "creation-manager" ]
+            [ h2 [] [ text "Creation Progress" ]
+            , text
+                ("Attribute points: "
+                    ++ toString model.creationManager.attributePoints
+                    ++ "/18"
+                )
+            , text
+                ("Ability points: "
+                    ++ toString model.creationManager.abilityPoints
+                    ++ "/28"
+                )
+            ]
+        , div [ class "character-sheet" ]
+            [ playerInformationView model
+            , allExAttributesView model
+            , allAbilitiesView model
+            ]
         ]
 
 

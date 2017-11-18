@@ -1,13 +1,16 @@
 .main-grid {
     display: grid;
-    height: 100vh;
     grid-template-columns: 1fr 4fr 1fr;
-    width: 100vw;
+}
+
+.creation-manager {
+    height: 100vh;
+    position: sticky;
+    top: 0;
 }
 
 .character-sheet {
     display: grid;
-    grid-area: 1 / 2 / 2 / 3;
     grid-template-rows: auto auto auto;
 }
 
