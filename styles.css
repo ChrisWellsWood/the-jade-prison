@@ -5,6 +5,7 @@
 
 .creation-manager {
     height: 100vh;
+    padding: 2px;
     position: sticky;
     top: 0;
 }
@@ -12,6 +13,7 @@
 .character-sheet {
     display: grid;
     grid-template-rows: auto auto auto;
+    padding: 2px;
 }
 
 .attributes {

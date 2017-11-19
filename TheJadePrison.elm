@@ -22,7 +22,7 @@ main =
 init : ( Model, Cmd Msg )
 init =
     (Model
-        (CreationManager 18 28)
+        (CreationManager 18 28 10)
         emptyPlayerInfo
         emptyExAttributes
         emptyExAbilities
@@ -45,6 +45,7 @@ type alias Model =
 type alias CreationManager =
     { attributePoints : Int
     , abilityPoints : Int
+    , favouredAbilities : Int
     }
 
 
@@ -179,12 +180,17 @@ update msg model =
 
         ToggleCasteOrFavoured exAbility ->
             let
-                exAbilities =
+                ( exAbilities, creationManager ) =
                     toggleCasteOrFavoured
                         exAbility
                         model.exAbilities
+                        model.creationManager
             in
-                { model | exAbilities = exAbilities } ! []
+                { model
+                    | exAbilities = exAbilities
+                    , creationManager = creationManager
+                }
+                    ! []
 
 
 updateExAttributes :
@@ -250,17 +256,30 @@ updateExAbilities exAbilities exAbility newValue creationManager =
         ( Dict.insert exAbility updatedValue exAbilities, newCM )
 
 
-toggleCasteOrFavoured : String -> ExAbilities -> ExAbilities
-toggleCasteOrFavoured exAbility exAbilities =
+toggleCasteOrFavoured :
+    String
+    -> ExAbilities
+    -> CreationManager
+    -> ( ExAbilities, CreationManager )
+toggleCasteOrFavoured exAbility exAbilities creationManager =
     let
         ( favoured, abilityValue ) =
             Dict.get exAbility exAbilities
                 |> Maybe.withDefault ( False, 0 )
 
+        newCM =
+            { creationManager
+                | favouredAbilities =
+                    if not favoured then
+                        creationManager.favouredAbilities - 1
+                    else
+                        creationManager.favouredAbilities + 1
+            }
+
         toggledFavoured =
             ( not favoured, abilityValue )
     in
-        Dict.insert exAbility toggledFavoured exAbilities
+        ( Dict.insert exAbility toggledFavoured exAbilities, newCM )
 
 
 
@@ -277,10 +296,17 @@ view model =
                     ++ toString model.creationManager.attributePoints
                     ++ "/18"
                 )
+            , hr [] []
             , text
                 ("Ability points: "
                     ++ toString model.creationManager.abilityPoints
                     ++ "/28"
+                )
+            , hr [] []
+            , text
+                ("Caste or Favoured Abilities: "
+                    ++ toString model.creationManager.favouredAbilities
+                    ++ "/10"
                 )
             ]
         , div [ class "character-sheet" ]
@@ -536,9 +562,15 @@ exAbilityView exAbilities creationManager exAbility =
                 True
             else
                 False
+
+        maxFavoured =
+            if creationManager.favouredAbilities < 0 then
+                True
+            else
+                False
     in
         div []
-            [ casteOrFavouredBox exAbility favoured
+            [ casteOrFavouredBox exAbility favoured maxFavoured
             , text exAbility
             , div
                 []
@@ -574,8 +606,8 @@ abilityDot exAbility overSpent abilityValue filled =
         ]
 
 
-casteOrFavouredBox : String -> Bool -> Html Msg
-casteOrFavouredBox exAbility casteOrFavoured =
+casteOrFavouredBox : String -> Bool -> Bool -> Html Msg
+casteOrFavouredBox exAbility casteOrFavoured maxFavoured =
     Svg.svg
         [ SvgAtt.width "18"
         , SvgAtt.height "18"
@@ -587,7 +619,10 @@ casteOrFavouredBox exAbility casteOrFavoured =
             , SvgAtt.stroke "black"
             , SvgAtt.strokeWidth "4"
             , if casteOrFavoured then
-                SvgAtt.fill "black"
+                if maxFavoured then
+                    SvgAtt.fill "red"
+                else
+                    SvgAtt.fill "black"
               else
                 SvgAtt.fill "white"
             ]
