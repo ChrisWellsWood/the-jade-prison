@@ -1,5 +1,7 @@
 module Main exposing (..)
 
+import Attributes exposing (..)
+import CreationManager exposing (..)
 import Dict
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -42,19 +44,8 @@ type alias Model =
     }
 
 
-type alias CreationManager =
-    { attributePoints : Int
-    , abilityPoints : Int
-    , favouredAbilities : Int
-    }
-
-
 type alias PlayerInformation =
     Dict.Dict String (Maybe String)
-
-
-type alias ExAttributes =
-    Dict.Dict String Int
 
 
 type alias ExAbilities =
@@ -70,21 +61,6 @@ emptyPlayerInfo =
         , ( "Concept", Nothing )
         , ( "Anima", Nothing )
         , ( "Supernal", Just "Archery" )
-        ]
-
-
-emptyExAttributes : ExAttributes
-emptyExAttributes =
-    Dict.fromList
-        [ ( "Strength", 1 )
-        , ( "Dexterity", 1 )
-        , ( "Stamina", 1 )
-        , ( "Charisma", 1 )
-        , ( "Manipulation", 1 )
-        , ( "Appearance", 1 )
-        , ( "Perception", 1 )
-        , ( "Intelligence", 1 )
-        , ( "Wits", 1 )
         ]
 
 
@@ -193,36 +169,6 @@ update msg model =
                     ! []
 
 
-updateExAttributes :
-    ExAttributes
-    -> String
-    -> Int
-    -> CreationManager
-    -> ( ExAttributes, CreationManager )
-updateExAttributes attributes exAttribute newValue creationManager =
-    let
-        currentValue =
-            Dict.get exAttribute attributes
-                |> Maybe.withDefault 1
-
-        atValue =
-            if (newValue == currentValue) then
-                1
-            else
-                newValue
-
-        updatedAttributePoints =
-            creationManager.attributePoints - (atValue - currentValue)
-
-        newCM =
-            { creationManager
-                | attributePoints =
-                    updatedAttributePoints
-            }
-    in
-        ( Dict.insert exAttribute atValue attributes, newCM )
-
-
 updateExAbilities :
     ExAbilities
     -> String
@@ -311,7 +257,10 @@ view model =
             ]
         , div [ class "character-sheet" ]
             [ playerInformationView model
-            , allExAttributesView model
+            , allExAttributesView
+                model.exAttributes
+                model.creationManager
+                EditExAttribute
             , allAbilitiesView model
             ]
         ]
@@ -377,125 +326,6 @@ supernalSelect =
     select
         [ onInput (EditPlayerInformation "Supernal") ]
         (List.map simpleOption abilities)
-
-
-
--- Attributes Section
-
-
-attributes : List String
-attributes =
-    physicalAttributes ++ socialAttributes ++ mentalAttributes
-
-
-physicalAttributes : List String
-physicalAttributes =
-    [ "Strength"
-    , "Dexterity"
-    , "Stamina"
-    ]
-
-
-socialAttributes : List String
-socialAttributes =
-    [ "Charisma"
-    , "Manipulation"
-    , "Appearance"
-    ]
-
-
-mentalAttributes : List String
-mentalAttributes =
-    [ "Perception"
-    , "Intelligence"
-    , "Wits"
-    ]
-
-
-allExAttributesView : Model -> Html Msg
-allExAttributesView model =
-    let
-        cmAttributes =
-            attributesSection
-                model.creationManager
-                model.exAttributes
-    in
-        div [ class "attributes" ]
-            [ div [ class "title-box-3col" ] [ h2 [] [ text "Attributes" ] ]
-            , cmAttributes "Physical" physicalAttributes
-            , cmAttributes "Mental" socialAttributes
-            , cmAttributes "Social" mentalAttributes
-            ]
-
-
-attributesSection :
-    CreationManager
-    -> ExAttributes
-    -> String
-    -> List String
-    -> Html Msg
-attributesSection creationManager exAttributes sectionName sectionAttributes =
-    div []
-        ([ h3 [] [ text sectionName ] ]
-            ++ (List.map
-                    (exAttributeView exAttributes creationManager)
-                    sectionAttributes
-               )
-        )
-
-
-exAttributeView : ExAttributes -> CreationManager -> String -> Html Msg
-exAttributeView exAttributes creationManager exAttribute =
-    let
-        exAttributeVal =
-            Dict.get exAttribute exAttributes
-                |> Maybe.withDefault 1
-
-        filledList =
-            List.map2 (\ref val -> ref >= val)
-                (List.repeat 5 exAttributeVal)
-                (List.range 1 5)
-
-        overSpent =
-            if creationManager.attributePoints < 0 then
-                True
-            else
-                False
-    in
-        div []
-            [ text exAttribute
-            , div
-                []
-                (List.map2 (attributeDot exAttribute overSpent)
-                    (List.range 1 5)
-                    filledList
-                )
-            ]
-
-
-attributeDot : String -> Bool -> Int -> Bool -> Html Msg
-attributeDot exAttribute overSpent attributeValue filled =
-    Svg.svg
-        [ SvgAtt.width "20"
-        , SvgAtt.height "20"
-        , onClick (EditExAttribute exAttribute attributeValue)
-        ]
-        [ Svg.circle
-            [ SvgAtt.cx "10"
-            , SvgAtt.cy "10"
-            , SvgAtt.r "8"
-            , SvgAtt.stroke "black"
-            , SvgAtt.strokeWidth "2"
-            , if filled then
-                if overSpent then
-                    SvgAtt.fill "red"
-                else
-                    SvgAtt.fill "black"
-              else
-                SvgAtt.fill "white"
-            ]
-            []
-        ]
 
 
 
