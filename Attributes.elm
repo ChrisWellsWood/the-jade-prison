@@ -88,11 +88,15 @@ updateExAttributes attributes exAttribute newValue creationManager =
 -- Attribute Views
 
 
-allExAttributesView : ExAttributes -> CreationManager -> (String -> Int -> msg) -> Html msg
+type alias EditAttMsg msg =
+    String -> Int -> msg
+
+
+allExAttributesView : ExAttributes -> CreationManager -> EditAttMsg msg -> Html msg
 allExAttributesView exAttributes creationManager editMsg =
     let
         cmAttributes =
-            attributesSection creationManager exAttributes editMsg
+            attributesSection exAttributes creationManager editMsg
     in
         div [ class "attributes" ]
             [ div [ class "title-box-3col" ] [ h2 [] [ text "Attributes" ] ]
@@ -103,17 +107,13 @@ allExAttributesView exAttributes creationManager editMsg =
 
 
 attributesSection :
-    CreationManager
-    -> ExAttributes
-    ->
-        (String
-         -> Int
-         -> msg
-        )
+    ExAttributes
+    -> CreationManager
+    -> EditAttMsg msg
     -> String
     -> List String
     -> Html msg
-attributesSection creationManager exAttributes editMsg sectionName sectionAttributes =
+attributesSection exAttributes creationManager editMsg sectionName sectionAttributes =
     div []
         ([ h3 [] [ text sectionName ] ]
             ++ (List.map
@@ -126,11 +126,7 @@ attributesSection creationManager exAttributes editMsg sectionName sectionAttrib
 exAttributeView :
     ExAttributes
     -> CreationManager
-    ->
-        (String
-         -> Int
-         -> msg
-        )
+    -> EditAttMsg msg
     -> String
     -> Html msg
 exAttributeView exAttributes creationManager editMsg exAttribute =
@@ -161,7 +157,7 @@ exAttributeView exAttributes creationManager editMsg exAttribute =
             ]
 
 
-attributeDot : (String -> Int -> msg) -> String -> Bool -> Int -> Bool -> Html msg
+attributeDot : EditAttMsg msg -> String -> Bool -> Int -> Bool -> Html msg
 attributeDot editMsg exAttribute overSpent attributeValue filled =
     Svg.svg
         [ SvgAtt.width "20"
