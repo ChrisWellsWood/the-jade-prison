@@ -19,19 +19,39 @@ type alias ExAttributes =
     Dict.Dict String Int
 
 
+exAttributes : List String
+exAttributes =
+    physicalAttributes ++ socialAttributes ++ mentalAttributes
+
+
+physicalAttributes : List String
+physicalAttributes =
+    [ "Strength"
+    , "Dexterity"
+    , "Stamina"
+    ]
+
+
+socialAttributes : List String
+socialAttributes =
+    [ "Charisma"
+    , "Manipulation"
+    , "Appearance"
+    ]
+
+
+mentalAttributes : List String
+mentalAttributes =
+    [ "Perception"
+    , "Intelligence"
+    , "Wits"
+    ]
+
+
 emptyExAttributes : ExAttributes
 emptyExAttributes =
-    Dict.fromList
-        [ ( "Strength", 1 )
-        , ( "Dexterity", 1 )
-        , ( "Stamina", 1 )
-        , ( "Charisma", 1 )
-        , ( "Manipulation", 1 )
-        , ( "Appearance", 1 )
-        , ( "Perception", 1 )
-        , ( "Intelligence", 1 )
-        , ( "Wits", 1 )
-        ]
+    List.map2 (,) exAttributes (List.repeat (List.length exAttributes) 1)
+        |> Dict.fromList
 
 
 updateExAttributes :
@@ -66,35 +86,6 @@ updateExAttributes attributes exAttribute newValue creationManager =
 
 
 -- Attribute Views
-
-
-attributes : List String
-attributes =
-    physicalAttributes ++ socialAttributes ++ mentalAttributes
-
-
-physicalAttributes : List String
-physicalAttributes =
-    [ "Strength"
-    , "Dexterity"
-    , "Stamina"
-    ]
-
-
-socialAttributes : List String
-socialAttributes =
-    [ "Charisma"
-    , "Manipulation"
-    , "Appearance"
-    ]
-
-
-mentalAttributes : List String
-mentalAttributes =
-    [ "Perception"
-    , "Intelligence"
-    , "Wits"
-    ]
 
 
 allExAttributesView : ExAttributes -> CreationManager -> (String -> Int -> msg) -> Html msg
