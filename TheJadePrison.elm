@@ -1,14 +1,13 @@
 module Main exposing (..)
 
 import Attributes exposing (..)
+import Abilities exposing (..)
 import CreationManager exposing (..)
 import Dict
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import String
-import Svg
-import Svg.Attributes as SvgAtt
 
 
 main : Program Never Model Msg
@@ -48,10 +47,6 @@ type alias PlayerInformation =
     Dict.Dict String (Maybe String)
 
 
-type alias ExAbilities =
-    Dict.Dict String ( Bool, Int )
-
-
 emptyPlayerInfo : PlayerInformation
 emptyPlayerInfo =
     Dict.fromList
@@ -61,38 +56,6 @@ emptyPlayerInfo =
         , ( "Concept", Nothing )
         , ( "Anima", Nothing )
         , ( "Supernal", Just "Archery" )
-        ]
-
-
-emptyExAbilities : ExAbilities
-emptyExAbilities =
-    Dict.fromList
-        [ ( "Archery", ( False, 0 ) )
-        , ( "Athletics", ( False, 0 ) )
-        , ( "Awareness", ( False, 0 ) )
-        , ( "Brawl", ( False, 0 ) )
-        , ( "Bureaucracy", ( False, 0 ) )
-        , ( "Craft", ( False, 0 ) )
-        , ( "Dodge", ( False, 0 ) )
-        , ( "Integrity", ( False, 0 ) )
-        , ( "Investigation", ( False, 0 ) )
-        , ( "Larceny", ( False, 0 ) )
-        , ( "Linguistics", ( False, 0 ) )
-        , ( "Lore", ( False, 0 ) )
-        , ( "Martial Arts", ( False, 0 ) )
-        , ( "Medicine", ( False, 0 ) )
-        , ( "Melee", ( False, 0 ) )
-        , ( "Occult", ( False, 0 ) )
-        , ( "Performance", ( False, 0 ) )
-        , ( "Presence", ( False, 0 ) )
-        , ( "Resistance", ( False, 0 ) )
-        , ( "Ride", ( False, 0 ) )
-        , ( "Sail", ( False, 0 ) )
-        , ( "Socialize", ( False, 0 ) )
-        , ( "Stealth", ( False, 0 ) )
-        , ( "Survival", ( False, 0 ) )
-        , ( "Thrown", ( False, 0 ) )
-        , ( "War", ( False, 0 ) )
         ]
 
 
@@ -169,65 +132,6 @@ update msg model =
                     ! []
 
 
-updateExAbilities :
-    ExAbilities
-    -> String
-    -> Int
-    -> CreationManager
-    -> ( ExAbilities, CreationManager )
-updateExAbilities exAbilities exAbility newValue creationManager =
-    let
-        ( favoured, currentValue ) =
-            Dict.get exAbility exAbilities
-                |> Maybe.withDefault ( False, 0 )
-
-        abValue =
-            if (newValue == currentValue) then
-                0
-            else
-                newValue
-
-        updatedValue =
-            ( favoured, abValue )
-
-        updatedAbilityPoints =
-            creationManager.abilityPoints - (abValue - currentValue)
-
-        newCM =
-            { creationManager
-                | abilityPoints =
-                    updatedAbilityPoints
-            }
-    in
-        ( Dict.insert exAbility updatedValue exAbilities, newCM )
-
-
-toggleCasteOrFavoured :
-    String
-    -> ExAbilities
-    -> CreationManager
-    -> ( ExAbilities, CreationManager )
-toggleCasteOrFavoured exAbility exAbilities creationManager =
-    let
-        ( favoured, abilityValue ) =
-            Dict.get exAbility exAbilities
-                |> Maybe.withDefault ( False, 0 )
-
-        newCM =
-            { creationManager
-                | favouredAbilities =
-                    if not favoured then
-                        creationManager.favouredAbilities - 1
-                    else
-                        creationManager.favouredAbilities + 1
-            }
-
-        toggledFavoured =
-            ( not favoured, abilityValue )
-    in
-        ( Dict.insert exAbility toggledFavoured exAbilities, newCM )
-
-
 
 -- View
 
@@ -261,7 +165,11 @@ view model =
                 model.exAttributes
                 model.creationManager
                 EditExAttribute
-            , allAbilitiesView model
+            , allAbilitiesView
+                model.exAbilities
+                model.creationManager
+                EditExAbility
+                ToggleCasteOrFavoured
             ]
         ]
 
@@ -326,135 +234,3 @@ supernalSelect =
     select
         [ onInput (EditPlayerInformation "Supernal") ]
         (List.map simpleOption abilities)
-
-
-
--- Abilities Section
-
-
-abilities : List String
-abilities =
-    [ "Archery"
-    , "Athletics"
-    , "Awareness"
-    , "Brawl"
-    , "Bureaucracy"
-    , "Craft"
-    , "Dodge"
-    , "Integrity"
-    , "Investigation"
-    , "Larceny"
-    , "Linguistics"
-    , "Lore"
-    , "Martial Arts"
-    , "Medicine"
-    , "Melee"
-    , "Occult"
-    , "Performance"
-    , "Presence"
-    , "Resistance"
-    , "Ride"
-    , "Sail"
-    , "Socialize"
-    , "Stealth"
-    , "Survival"
-    , "Thrown"
-    , "War"
-    ]
-
-
-allAbilitiesView : Model -> Html Msg
-allAbilitiesView model =
-    div [ class "abilities" ]
-        [ div [ class "title-box-3col" ] [ h2 [] [ text "Abilities" ] ]
-        , div []
-            (List.map
-                (exAbilityView model.exAbilities model.creationManager)
-                abilities
-            )
-        ]
-
-
-exAbilityView : ExAbilities -> CreationManager -> String -> Html Msg
-exAbilityView exAbilities creationManager exAbility =
-    let
-        ( favoured, exAbilityVal ) =
-            Dict.get exAbility exAbilities
-                |> Maybe.withDefault ( False, 0 )
-
-        filledList =
-            List.map2 (\ref val -> ref >= val)
-                (List.repeat 5 exAbilityVal)
-                (List.range 1 5)
-
-        overSpent =
-            if creationManager.abilityPoints < 0 then
-                True
-            else
-                False
-
-        maxFavoured =
-            if creationManager.favouredAbilities < 0 then
-                True
-            else
-                False
-    in
-        div []
-            [ casteOrFavouredBox exAbility favoured maxFavoured
-            , text exAbility
-            , div
-                []
-                (List.map2 (abilityDot exAbility overSpent)
-                    (List.range 1 5)
-                    filledList
-                )
-            ]
-
-
-abilityDot : String -> Bool -> Int -> Bool -> Html Msg
-abilityDot exAbility overSpent abilityValue filled =
-    Svg.svg
-        [ SvgAtt.width "20"
-        , SvgAtt.height "20"
-        , onClick (EditExAbility exAbility abilityValue)
-        ]
-        [ Svg.circle
-            [ SvgAtt.cx "10"
-            , SvgAtt.cy "10"
-            , SvgAtt.r "8"
-            , SvgAtt.stroke "black"
-            , SvgAtt.strokeWidth "2"
-            , if filled then
-                if overSpent then
-                    SvgAtt.fill "red"
-                else
-                    SvgAtt.fill "black"
-              else
-                SvgAtt.fill "white"
-            ]
-            []
-        ]
-
-
-casteOrFavouredBox : String -> Bool -> Bool -> Html Msg
-casteOrFavouredBox exAbility casteOrFavoured maxFavoured =
-    Svg.svg
-        [ SvgAtt.width "18"
-        , SvgAtt.height "18"
-        , onClick (ToggleCasteOrFavoured exAbility)
-        ]
-        [ Svg.rect
-            [ SvgAtt.width "18"
-            , SvgAtt.height "18"
-            , SvgAtt.stroke "black"
-            , SvgAtt.strokeWidth "4"
-            , if casteOrFavoured then
-                if maxFavoured then
-                    SvgAtt.fill "red"
-                else
-                    SvgAtt.fill "black"
-              else
-                SvgAtt.fill "white"
-            ]
-            []
-        ]
